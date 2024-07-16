@@ -24,8 +24,21 @@ module combfold_helper:
             tag="v0.2.1")
   config: config
 
+module combfold:
+  """Needs
+  [submodule "workflow/scripts/dependencies/CombFold"]
+  	path = tools/CombFold
+	  url = git@github.com:Luke-ebbis/CombFold.git
+  """
+  snakefile:
+        github("Luke-ebbis/complex-prediction", path="workflow/rules/CombFold.smk",
+            tag="v0.2.1")
+  config: config
+
 
 use rule * from combfold_helper
+use rule * from combfold_folder
+use rule * from combfold
 
 
 
