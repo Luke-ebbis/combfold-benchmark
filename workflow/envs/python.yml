@@ -1,0 +1,4 @@
+channels:
+  - conda-forge
+dependecies
+  - python3

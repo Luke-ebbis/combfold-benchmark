@@ -51,7 +51,7 @@ module analysis:
 use rule * from combfold_helper
 use rule * from combfold_folder
 use rule * from combfold
-use rule * from analysis as analysis_*
+use rule * from analysis exclude build_ascii_graph as analysis_*
 
 
 use rule preprocess from combfold as new_preprocess with:
@@ -67,6 +67,17 @@ use rule fasta from analysis as new_fasta with:
   input: "results/known/pdb/{identifier}.pdb"
   output: "results/known/fasta/{identifier}.fasta"
 
+
+rule format_combfold_job:
+  conda: "envs/python.yml"
+  input: "results/known/fasta/{identifier}.fasta"
+  output: "results/data/{identifier}/{identifier}.json"
+  params:
+    script=workflow.source_path("scripts/fasta2combfold.py")
+  shell:
+    """
+    python3 {params.script}
+    """
 
 
 ## help:
