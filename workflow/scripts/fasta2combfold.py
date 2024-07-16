@@ -31,7 +31,7 @@ def format_combfold_dict(records):
     job = dict()
     for record in records:
         current = dict()
-        chainid = record.name.split(":")[1]
+        chainid = record.name.split("_")[1]
         name = f"{chainid}0"
         current['name'] = name
         current['chain_names'] = [chainid]

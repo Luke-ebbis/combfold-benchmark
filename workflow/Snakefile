@@ -45,13 +45,15 @@ module combfold:
 module analysis:
   snakefile:
         github("Luke-ebbis/protein-structure-comparison", path="workflow/Snakefile",
-            tag="v0.1.1")
+            tag="v0.1.3")
   config: config
 
 use rule * from combfold_helper
 use rule * from combfold_folder
 use rule * from combfold
 use rule * from analysis exclude build_ascii_graph as analysis_*
+
+ruleorder: download > new_convert
 
 
 use rule preprocess from combfold as new_preprocess with:
@@ -61,7 +63,11 @@ use rule preprocess from combfold as new_preprocess with:
 
 
 use rule download_rcsb from analysis as download with:
-  output: "results/known/pdb/{identifier}.{ext}"
+  output: "results/known/download/{identifier}.{ext}"
+
+use rule convert from analysis as new_convert with:
+  input: "results/known/download/{identifier}.cif"
+  output: "results/known/pdb/{identifier}.pdb"
 
 use rule fasta from analysis as new_fasta with:
   input: "results/known/pdb/{identifier}.pdb"
