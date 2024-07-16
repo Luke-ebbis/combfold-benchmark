@@ -1,2 +1,4 @@
 colabfold:
   number_of_models: "5"
+assess:
+  - "6DV2"
