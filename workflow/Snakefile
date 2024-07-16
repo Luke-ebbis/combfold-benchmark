@@ -10,7 +10,7 @@ configfile: "config/config.yml"
 
 rule all:
   input:
-    expand("results/known/fasta/{name}.fasta",
+    expand("results/data/{name}/{name}.json",
         name=config['assess'])
 
 onstart:
@@ -76,7 +76,7 @@ rule format_combfold_job:
     script=workflow.source_path("scripts/fasta2combfold.py")
   shell:
     """
-    python3 {params.script}
+    python3 {params.script} {input} {output}
     """
 
 
