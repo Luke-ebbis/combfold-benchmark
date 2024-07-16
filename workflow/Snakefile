@@ -10,7 +10,7 @@ configfile: "config/config.yml"
 
 rule all:
   input:
-    expand("results/data/{name}/{name}.json",
+    expand("results/data/{name}/combfold",
         name=config['assess'])
 
 onstart:
