@@ -12,14 +12,22 @@ onstart:
     print("##### running pipeline  #####\n") 
     # shell("mkdir -p jobs/printContent")
 
+module combfold_folder:
+  snakefile:
+        github("Luke-ebbis/complex-prediction", path="workflow/rules/folding.smk",
+            tag="v0.2.1")
+  config: config
+
 module combfold_helper:
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/helpers.smk",
-            branch="dev-27")
-#tag="v0.2.1"),
+            tag="v0.2.1")
   config: config
 
+
 use rule * from combfold_helper
+
+
 
 ## help:
 ##    Show the help.
@@ -27,6 +35,7 @@ use rule * from combfold_helper
 rule help:
   input: "workflow/Snakefile"
   shell: "sed -n 's/^##//p' {input}"
+
 
 ## clean:                     
 ##    Clean all outputs from the results folder.
