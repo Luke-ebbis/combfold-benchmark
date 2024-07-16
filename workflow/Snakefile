@@ -42,7 +42,11 @@ use rule * from combfold_helper
 use rule * from combfold_folder
 use rule * from combfold
 
-
+# input overide
+use rule preprocess from combfold as new_preprocess with:
+  input: "results/known/jobs/{name}.json"
+  output:
+    "results/data/{name}/{name}.json"
 
 ## help:
 ##    Show the help.
