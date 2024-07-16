@@ -1,3 +1,3 @@
-[submodule "workflow/scripts/dependencies/CombFold"]
+[submodule "tools/CombFold"]
 	path = tools/CombFold
 	url = git@github.com:Luke-ebbis/CombFold.git
