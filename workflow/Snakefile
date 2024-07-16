@@ -1,7 +1,8 @@
-## <NAME>
-## 
-## DESCRIPTION
-## 
+## Running predictions on protein sequences from the PDB
+##
+## This pipeline runs predictions on protein sequences, as taken from the
+## protein structures and chain names on rcsb pdb.
+##
 ## Rules
 ## -----
 ##
