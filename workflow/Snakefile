@@ -10,9 +10,8 @@
 configfile: "config/config.yml"
 
 rule all:
+  message: f"Analysing the entries {config['assess']}"
   input:
-    # expand("results/data/{name}/{name}.json",
-        # name=config['assess'])
     expand("results/data/{name}/combfold",
         name=config['assess'])
 
@@ -39,9 +38,10 @@ localrules:
   us_align_pymol_picture,
 
 
-onstart:
-    print(f"##### running pipeline  #####\n {config}") 
+# onstart:
+    # print(f"##### running pipeline  #####\n {config}")
 
+# TODO unify thise variables
 TOOLS_DIR = "tools"
 TOOL_DIR = TOOLS_DIR
 module combfold_folder:
@@ -117,30 +117,30 @@ use rule us_align from analysis as us_align with:
   output: "results/comparison/{protein_complex}.usalign.txt"
 
 
-# use rule us_align_sup from analysis as us_align_sup with:
-  # input:
-    # x=get_combfold_structures_here,
-    # y="results/known/pdb/{protein_complex}.pdb",
-  # output: "results/comparison/{protein_complex}.usalign.sup"
-#
-#
-# use rule us_align_pymol_session from analysis as us_align_pymol_session with:
-  # input:
-    # x=get_combfold_structures_here,
-    # y="results/known/pdb/{protein_complex}.pdb",
-    # superposition="results/comparison/{x}-{y}.usalign.sup"
-  # output: "results/comparison/{protein_complex}.usalign.sup.pse"
-#
-#
-#
-# use rule us_align_pymol_picture from analysis as us_align_pymol_picture with:
-  # input: "results/comparison/{protein_complex}.usalign.sup"
-  # output: "results/comparison/{protein_complex}.usalign.sup.png"
-#
-# use rule crop from analysis as crop with:
-  # input: "results/comparison/{protein_complex}.usalign.sup.png"
-  # output: "results/comparison/{protein_complex}.usalign.sup.crop.png"
-#
+use rule us_align_sup from analysis as us_align_sup with:
+  input:
+    x=get_combfold_structures_here,
+    y="results/known/pdb/{protein_complex}.pdb",
+  output: "results/comparison/{protein_complex}.usalign.sup"
+
+
+use rule us_align_pymol_session from analysis as us_align_pymol_session with:
+  input:
+    x=get_combfold_structures_here,
+    y="results/known/pdb/{protein_complex}.pdb",
+    superposition="results/comparison/{x}-{y}.usalign.sup"
+  output: "results/comparison/{protein_complex}.usalign.sup.pse"
+
+
+
+use rule us_align_pymol_picture from analysis as us_align_pymol_picture with:
+  input: "results/comparison/{protein_complex}.usalign.sup"
+  output: "results/comparison/{protein_complex}.usalign.sup.png"
+
+use rule crop from analysis as crop with:
+  input: "results/comparison/{protein_complex}.usalign.sup.png"
+  output: "results/comparison/{protein_complex}.usalign.sup.crop.png"
+
 
 rule format_combfold_job:
   conda: "envs/python.yml"

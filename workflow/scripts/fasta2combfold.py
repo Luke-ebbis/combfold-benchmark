@@ -28,6 +28,7 @@ def read_fasta(input_file):
 
 
 def format_combfold_dict(records):
+    # TODO Handle X amino acid. Handle concat of unique seqs
     job = dict()
     for record in records:
         current = dict()
