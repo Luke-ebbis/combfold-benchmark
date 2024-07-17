@@ -14,6 +14,28 @@ rule all:
     expand("results/data/{name}/combfold",
         name=config['assess'])
 
+
+localrules: 
+  preprocess,
+  download,
+  combfold_helper,
+  preprocess,
+  new_convert,
+  fasta,
+  format_combfold_job,
+  help,
+  build_overview,
+  install_easy_graph,
+  build_ascii_graph,
+  run_internet_rules, 
+  setup_cuda, 
+  setup_combfold, 
+  produce_fasta_pairs, 
+  gather_pdb_pairs, 
+  produce_fasta_groups, 
+  gather_pdb_groups
+
+
 onstart:
     print(f"##### running pipeline  #####\n {config}") 
 
@@ -22,13 +44,13 @@ TOOL_DIR = "tools"
 module combfold_folder:
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/folding.smk",
-            tag="v0.2.2")
+            tag="v0.2.3")
   config: config
 
 module combfold_helper:
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/helpers.smk",
-            tag="v0.2.2")
+            tag="v0.2.3")
   config: config
 
 module combfold:
@@ -39,14 +61,14 @@ module combfold:
   """
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/CombFold.smk",
-            tag="v0.2.2")
+            tag="v0.2.3")
   config: config
 
 
 module analysis:
   snakefile:
         github("Luke-ebbis/protein-structure-comparison", path="workflow/Snakefile",
-            tag="v0.1.4")
+            tag="v0.1.5")
   config: config
 
 use rule * from combfold_helper
@@ -70,10 +92,13 @@ use rule convert from analysis as new_convert with:
   input: "results/known/download/{identifier}.cif"
   output: "results/known/pdb/{identifier}.pdb"
 
-use rule fasta from analysis as new_fasta with:
+rule fasta:
   input: "results/known/pdb/{identifier}.pdb"
   output: "results/known/fasta/{identifier}.fasta"
-
+  shell:
+    """
+    wget -O{output} "https://www.rcsb.org/fasta/entry/{wildcards.identifier}" --no-check-certificate
+    """
 
 rule format_combfold_job:
   conda: "envs/python.yml"
