@@ -18,7 +18,6 @@ rule all:
 localrules: 
   preprocess,
   download,
-  combfold_helper,
   preprocess,
   new_convert,
   fasta,
@@ -27,8 +26,6 @@ localrules:
   build_overview,
   install_easy_graph,
   build_ascii_graph,
-  run_internet_rules, 
-  setup_cuda, 
   setup_combfold, 
   produce_fasta_pairs, 
   gather_pdb_pairs, 
