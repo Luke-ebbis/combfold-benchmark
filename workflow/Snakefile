@@ -30,24 +30,25 @@ localrules:
   produce_fasta_pairs, 
   gather_pdb_pairs, 
   produce_fasta_groups, 
-  gather_pdb_groups
+  gather_pdb_groups,
+  gather_pdb
 
 
 onstart:
     print(f"##### running pipeline  #####\n {config}") 
 
-TOOL_DIR = "tools"
+TOOLS_DIR = "tools"
 
 module combfold_folder:
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/folding.smk",
-            tag="v0.2.3")
+            tag="v0.2.4")
   config: config
 
 module combfold_helper:
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/helpers.smk",
-            tag="v0.2.3")
+            tag="v0.2.4")
   config: config
 
 module combfold:
@@ -58,7 +59,7 @@ module combfold:
   """
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/CombFold.smk",
-            tag="v0.2.3")
+            tag="v0.2.4")
   config: config
 
 
