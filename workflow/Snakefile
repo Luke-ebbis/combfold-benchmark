@@ -44,22 +44,30 @@ localrules:
 # TODO unify thise variables
 TOOLS_DIR = "tools"
 TOOL_DIR = TOOLS_DIR
+
+
 module combfold_folder:
+  """The calls to AF2M
+  """
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/folding.smk",
             branch="dev-27")
   config: config
 
+
 module combfold_helper:
+  """Importing helper functions for moving files
+  """
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/helpers.smk",
             branch="dev-27")
   config: config
 
 
-
 module combfold:
-  """Needs
+  """The calls to the combfold algorithm
+
+  Needs in .gitmodule
   [submodule "workflow/scripts/dependencies/CombFold"]
   	path = tools/CombFold
 	  url = git@github.com:Luke-ebbis/CombFold.git
@@ -76,12 +84,11 @@ module analysis:
             tag="dev")
   config: config
 
+
 use rule * from combfold_helper
 use rule * from combfold_folder
 use rule * from combfold
 use rule * from analysis exclude build_ascii_graph as analysis_*
-
-ruleorder: download > new_convert
 
 
 use rule preprocess from combfold as new_preprocess with:
