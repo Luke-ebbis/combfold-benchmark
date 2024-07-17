@@ -31,19 +31,20 @@ def format_combfold_dict(records):
     job = dict()
     for record in records:
         current = dict()
-        logging.info(f"Found record {record.name}")
-        chainids = [s.strip()[0] for s in record.description.split("|")[1].replace("Chains", "").split(',')]
-        name = record.name.split("|")[0]
+        chainid = record.name.replace(":", "_").split("_")[1]
+        name = f"{chainid}0"
         current['name'] = name
-        current['chain_names'] = chainids
+        current['chain_names'] = [chainid]
         current['start_res']= 1
         seq = str(record.seq)
+        current['sequence'] = seq
+        job[name] = current
         if "X" in seq:
             continue
         if len(seq) > 1800:
             raise RuntimeError(f"Sequence is {len(seq)}. This is too long")
         current['sequence'] = seq
-        logging.info(f"Found record {name} with {chainids}")
+        logging.info(f"Found record {name} with {chainid}")
         job[name] = current
     return job
 

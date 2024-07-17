@@ -11,6 +11,8 @@ configfile: "config/config.yml"
 
 rule all:
   input:
+    # expand("results/data/{name}/{name}.json",
+        # name=config['assess'])
     expand("results/data/{name}/combfold",
         name=config['assess'])
 
@@ -71,7 +73,7 @@ module combfold:
 module analysis:
   snakefile:
         github("Luke-ebbis/protein-structure-comparison", path="workflow/Snakefile",
-            tag="v0.1.5")
+            tag="dev")
   config: config
 
 use rule * from combfold_helper
@@ -95,13 +97,9 @@ use rule convert from analysis as new_convert with:
   input: "results/known/download/{identifier}.cif"
   output: "results/known/pdb/{identifier}.pdb"
 
-rule fasta:
+use rule fasta from analysis as fasta with:
   input: "results/known/pdb/{identifier}.pdb"
   output: "results/known/fasta/{identifier}.fasta"
-  shell:
-    """
-    wget -O{output} "https://www.rcsb.org/fasta/entry/{wildcards.identifier}" --no-check-certificate
-    """
 
 
 def get_combfold_structures_here(wildcards):
