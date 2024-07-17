@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import Bio.PDB
-from Bio.SeqIO import PdbIO, FastaIO
+from Bio.SeqIO import FastaIO
 from Bio import SeqIO
 import os
 import itertools
@@ -39,15 +39,38 @@ def format_combfold_dict(records):
         current['start_res']= 1
         seq = str(record.seq)
         current['sequence'] = seq
-        job[name] = current
-        if "X" in seq:
-            continue
         if len(seq) > 1800:
             raise RuntimeError(f"Sequence is {len(seq)}. This is too long")
         current['sequence'] = seq
         logging.info(f"Found record {name} with {chainid}")
-        job[name] = current
+        if "X" not  in seq:
+            job[name] = current
+        else:
+            logger.info(f"{name} skipped as it has unknown sequences")
     return job
+
+
+def process_combfold_dict(records):
+    """Remove duplicated sequences and put them under the same name 
+    """
+    updated_records = records.copy()
+    removed_names = set()
+    for name in records:
+        logging.debug(f"checking {name} for duplicated sequence chains")
+        current_sequence = records[name]['sequence']
+        for check_name in records:
+            if check_name != name:
+                current_sequence = records[name]['sequence']
+                logging.debug(f"checking {check_name} ")
+                other_sequence = records[check_name]['sequence']
+                if other_sequence == current_sequence and name not in removed_names:
+                    removed = updated_records.pop(check_name)
+                    removed_names.add(check_name)
+                    removed_chain_names = [l for l in removed['chain_names']]
+                    logging.debug(f"Sequence duplicate in {name}-{check_name}"\
+                                  f"\nChain {removed_chain_names} will be added")
+                    updated_records[name]['chain_names'] += removed_chain_names
+    return updated_records
 
 
 def write_job(jobdict: Dict, file) -> None:
@@ -68,7 +91,8 @@ def main():
 
     sequences = read_fasta(args.fasta)
     job = format_combfold_dict(sequences)
-    write_job(job, args.output)
+    processed_job = process_combfold_dict(job)
+    write_job(processed_job, args.output)
 
 
 if __name__ == "__main__":
