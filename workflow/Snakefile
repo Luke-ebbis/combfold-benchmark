@@ -183,7 +183,7 @@ rule install_easy_graph:
   conda:
     "envs/utils.yml"
   output:
-    touch("results/checkpoints/install_easy_graph")
+    touch("results/.checkpoints/easy_graph")
   shell:
     """
     echo "Installing easy graph"
