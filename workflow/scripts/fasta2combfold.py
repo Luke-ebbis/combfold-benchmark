@@ -30,6 +30,7 @@ def read_fasta(input_file):
 def format_combfold_dict(records):
     # TODO Handle X amino acid. Handle concat of unique seqs
     job = dict()
+    tot = 0
     for record in records:
         current = dict()
         chainid = record.name.replace(":", "_").split("_")[1]
@@ -42,11 +43,15 @@ def format_combfold_dict(records):
         if len(seq) > 1800:
             raise RuntimeError(f"Sequence is {len(seq)}. This is too long")
         current['sequence'] = seq
-        logging.info(f"Found record {name} with {chainid}")
+        tot += len(seq)
+        logging.info(f"Found record {name} with {chainid} -- len: {len(seq)}")
         if "X" not  in seq:
             job[name] = current
         else:
-            logger.info(f"{name} skipped as it has unknown sequences")
+            current['sequence'] = "".join([s for s in seq if s != "X"])
+            logger.info(f"In {name} X residues are removed")
+            job[name] = current
+        logger.info(f"Total amount of residues: {tot}")
     return job
 
 
