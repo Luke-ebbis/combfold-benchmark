@@ -106,18 +106,17 @@ use rule fasta from analysis as fasta with:
 import os
 
 def get_combfold_structures_here(wildcards):
-  print(print(wildcards.keys()))
   output_folder = checkpoints.combfold.get(protein_complex=wildcards.protein_complex).output
   output_structures = os.listdir(f"{output_folder}/assembled_results/")
-  output_structures = [f for f in output_structures if f.endswith("pdb")]
+  output_structures = [f for f in output_structures if f.endswith("pdb") and wildcards.output in f].pop()
 
-  return output_structures
+  return f"{output_folder}/assembled_results/{output_structures}"
 
 
 
 use rule us_align from analysis as us_align with:
   input:
-    x="results/data/{protein_complex}/combfold/assembled_results/{output}.pdb",
+    x=get_combfold_structures_here,
     y="results/known/pdb/{protein_complex}.pdb",
   output:
     "results/align/{protein_complex}-vs-{output}.usalign.txt"
@@ -126,25 +125,21 @@ use rule us_align from analysis as us_align with:
 
 use rule us_align_pymol_session from analysis as us_align_pymol_session  with:
   input:
-    x="results/data/{name}/combfold/assembled_results/{output}.pdb",
-    y="results/known/pdb/{name}.pdb",
+    x=get_combfold_structures_here,
+    y="results/known/pdb/{protein_complex}.pdb",
   output:
-    "results/align/{name}-vs-{output}.usalign.sup.pse"
+    "results/align/{protein_complex}-vs-{output}.usalign.sup.pse"
 
 use rule us_align_sup from analysis as us_align_sup with:
   input:
-    x="results/data/{name}/combfold/assembled_results/{output}.pdb",
-    y="results/known/pdb/{name}.pdb",
+    x=get_combfold_structures_here,
+    y="results/known/pdb/{protein_complex}.pdb",
   output:
-    "results/align/{name}-vs-{output}.usalign.sup"
+    "results/align/{protein_complex}-vs-{output}.usalign.sup"
 
 rule collect_align:
   input:
-    "results/data/{protein_complex}/combfold",
     "results/align/{protein_complex}-vs-output_clustered_0.usalign.txt",
-    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup.crop.png",
-    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup",
-    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup.pse"
   output:
     touch("results/.checkpoints/alignments_{protein_complex}")
 
