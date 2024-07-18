@@ -1,52 +1,181 @@
-## <NAME>
-## 
-## DESCRIPTION
-## 
+## Running predictions on protein sequences from the PDB
+##
+## This pipeline runs predictions on protein sequences, as taken from the
+## protein structures and chain names on rcsb pdb.
+##
 ## Rules
 ## -----
 ##
 
 configfile: "config/config.yml"
 
-onstart:
-    print("##### running pipeline  #####\n") 
-    # shell("mkdir -p jobs/printContent")
 
-TOOL_DIR = "tools"
+
+localrules: 
+  preprocess,
+  download,
+  preprocess,
+  new_convert,
+  fasta,
+  format_combfold_job,
+  help,
+  build_overview,
+  install_easy_graph,
+  build_ascii_graph,
+  setup_combfold, 
+  produce_fasta_pairs, 
+  gather_pdb_pairs, 
+  produce_fasta_groups, 
+  gather_pdb_groups,
+  gather_pdb,
+  crop,
+  us_align_pymol_session,
+  us_align_pymol_picture,
+
+
+# onstart:
+    # print(f"##### running pipeline  #####\n {config}")
+
+# TODO unify thise variables
+TOOLS_DIR = "tools"
+TOOL_DIR = TOOLS_DIR
+
 
 module combfold_folder:
+  """The calls to AF2M
+  """
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/folding.smk",
-            tag="v0.2.2")
+            branch="dev-27")
   config: config
+
 
 module combfold_helper:
+  """Importing helper functions for moving files
+  """
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/helpers.smk",
-            tag="v0.2.2")
+            branch="dev-27")
   config: config
 
+
 module combfold:
-  """Needs
+  """The calls to the combfold algorithm
+
+  Needs in .gitmodule
   [submodule "workflow/scripts/dependencies/CombFold"]
   	path = tools/CombFold
 	  url = git@github.com:Luke-ebbis/CombFold.git
   """
   snakefile:
         github("Luke-ebbis/complex-prediction", path="workflow/rules/CombFold.smk",
-            tag="v0.2.2")
+            branch="dev-27")
+  config: config
+
+
+module analysis:
+  snakefile:
+        github("Luke-ebbis/protein-structure-comparison", path="workflow/Snakefile",
+            tag="dev")
   config: config
 
 
 use rule * from combfold_helper
 use rule * from combfold_folder
 use rule * from combfold
+use rule * from analysis exclude  build_ascii_graph as analysis_*
 
-# input overide
+
 use rule preprocess from combfold as new_preprocess with:
   input: "results/known/jobs/{name}.json"
   output:
     "results/data/{name}/{name}.json"
+
+
+use rule download_rcsb from analysis as download with:
+  output: "results/known/download/{identifier}.{ext}"
+
+use rule convert from analysis as new_convert with:
+  input: "results/known/download/{identifier}.cif"
+  output: "results/known/pdb/{identifier}.pdb"
+
+use rule fasta from analysis as fasta with:
+  input: "results/known/pdb/{identifier}.pdb"
+  output: "results/known/fasta/{identifier}.fasta"
+
+import os
+
+def get_combfold_structures_here(wildcards):
+  print(print(wildcards.keys()))
+  output_folder = checkpoints.combfold.get(protein_complex=wildcards.protein_complex).output
+  output_structures = os.listdir(f"{output_folder}/assembled_results/")
+  output_structures = [f for f in output_structures if f.endswith("pdb")]
+
+  return output_structures
+
+
+
+use rule us_align from analysis as us_align with:
+  input:
+    x="results/data/{protein_complex}/combfold/assembled_results/{output}.pdb",
+    y="results/known/pdb/{protein_complex}.pdb",
+  output:
+    "results/align/{protein_complex}-vs-{output}.usalign.txt"
+
+
+
+use rule us_align_pymol_session from analysis as us_align_pymol_session  with:
+  input:
+    x="results/data/{name}/combfold/assembled_results/{output}.pdb",
+    y="results/known/pdb/{name}.pdb",
+  output:
+    "results/align/{name}-vs-{output}.usalign.sup.pse"
+
+use rule us_align_sup from analysis as us_align_sup with:
+  input:
+    x="results/data/{name}/combfold/assembled_results/{output}.pdb",
+    y="results/known/pdb/{name}.pdb",
+  output:
+    "results/align/{name}-vs-{output}.usalign.sup"
+
+rule collect_align:
+  input:
+    "results/data/{protein_complex}/combfold",
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.txt",
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup.crop.png",
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup",
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup.pse"
+  output:
+    touch("results/.checkpoints/alignments_{protein_complex}")
+
+
+
+use rule us_align_pymol_picture from analysis as us_align_pymol_picture with:
+  input: 
+    "results/align/{name}-vs-{output}.usalign.sup"
+  output: 
+    "results/align/{name}-vs-{output}.usalign.sup.png"
+
+use rule crop from analysis as crop with:
+  input: 
+    "results/align/{name}-vs-{output}.usalign.sup.png"
+  output: 
+    "results/align/{name}-vs-{output}.usalign.sup.crop.png"
+
+
+  
+
+rule format_combfold_job:
+  conda: "envs/python.yml"
+  input: "results/known/fasta/{identifier}.fasta"
+  output: "results/data/{identifier}/{identifier}.json"
+  params:
+    script=workflow.source_path("scripts/fasta2combfold.py")
+  shell:
+    """
+    python3 {params.script} {input} {output}
+    """
+
 
 ## help:
 ##    Show the help.
@@ -66,6 +195,8 @@ rule clean:
 ##    Print the directed acyclic graph.
 ##
 rule build_overview:
+  conda:
+    "envs/utils.yml"
   output:
     "results/method.{fileformat}"
   shell:
@@ -77,7 +208,7 @@ rule install_easy_graph:
   conda:
     "envs/utils.yml"
   output:
-    touch("results/checkpoints/install_easy_graph")
+    touch("results/.checkpoints/easy_graph")
   shell:
     """
     echo "Installing easy graph"
@@ -100,3 +231,13 @@ rule build_ascii_graph:
     graph-easy --from=dot --as_ascii out >  {output}
     rm out
     """
+
+rule all:
+  message: f"Analysing the entries {config['assess']}"
+  input:
+    expand("results/data/{name}/combfold",
+        name=config['assess']),
+    expand("results/.checkpoints/alignments_{protein_complex}",
+        protein_complex=config['assess']),
+  default_target: True
+  priority: 50

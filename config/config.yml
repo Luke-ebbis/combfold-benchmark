@@ -1,2 +1,5 @@
 colabfold:
   number_of_models: "5"
+assess:
+  - "6dv2-assembly1"
+  # - "2VGB"
