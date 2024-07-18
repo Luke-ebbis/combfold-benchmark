@@ -83,7 +83,7 @@ module analysis:
 use rule * from combfold_helper
 use rule * from combfold_folder
 use rule * from combfold
-use rule * from analysis exclude all build_ascii_graph as analysis_*
+use rule * from analysis exclude  build_ascii_graph as analysis_*
 
 
 use rule preprocess from combfold as new_preprocess with:
@@ -123,6 +123,14 @@ use rule us_align from analysis as us_align with:
     "results/align/{protein_complex}-vs-{output}.usalign.txt"
 
 
+
+use rule us_align_pymol_session from analysis as us_align_pymol_session  with:
+  input:
+    x="results/data/{name}/combfold/assembled_results/{output}.pdb",
+    y="results/known/pdb/{name}.pdb",
+  output:
+    "results/align/{name}-vs-{output}.usalign.sup.pse"
+
 use rule us_align_sup from analysis as us_align_sup with:
   input:
     x="results/data/{name}/combfold/assembled_results/{output}.pdb",
@@ -133,24 +141,28 @@ use rule us_align_sup from analysis as us_align_sup with:
 rule collect_align:
   input:
     "results/data/{protein_complex}/combfold",
-    "results/align/{protein_complex}-vs-output_clustered_0.usalign.txt"
-        # output=get_combfold_structures_here),
-    # expand("results/align/{protein_complex}-vs-{output}.usalign.sup",
-        # output=get_combfold_structures_here)
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.txt",
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup.crop.png",
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup",
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.sup.pse"
   output:
     touch("results/.checkpoints/alignments_{protein_complex}")
 
 
 
-# use rule us_align_pymol_picture from analysis as us_align_pymol_picture with:
-  # input: "results/comparison/{protein_complex}.usalign.sup"
-  # output: "results/comparison/{protein_complex}.usalign.sup.png"
-#
-# use rule crop from analysis as crop with:
-  # input: "results/comparison/{protein_complex}.usalign.sup.png"
-  # output: "results/comparison/{protein_complex}.usalign.sup.crop.png"
-#
-#
+use rule us_align_pymol_picture from analysis as us_align_pymol_picture with:
+  input: 
+    "results/align/{name}-vs-{output}.usalign.sup"
+  output: 
+    "results/align/{name}-vs-{output}.usalign.sup.png"
+
+use rule crop from analysis as crop with:
+  input: 
+    "results/align/{name}-vs-{output}.usalign.sup.png"
+  output: 
+    "results/align/{name}-vs-{output}.usalign.sup.crop.png"
+
+
   
 
 rule format_combfold_job:
@@ -183,6 +195,8 @@ rule clean:
 ##    Print the directed acyclic graph.
 ##
 rule build_overview:
+  conda:
+    "envs/utils.yml"
   output:
     "results/method.{fileformat}"
   shell:
