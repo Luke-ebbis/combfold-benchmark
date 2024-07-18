@@ -8,14 +8,14 @@ platforms = ["linux-64"]
 
 
 [tasks]
-make = "snakemake --sdm conda apptainer -c 1"
+make = "snakemake --sdm conda apptainer -c 1 --rerun-trigger mtime"
 test = "snakemake -c 1 -np"
-slurm = "snakemake --sdm conda apptainer --workflow-profile workflow/profiles/slurm"
+slurm = "snakemake --sdm conda apptainer --workflow-profile workflow/profiles/slurm --rerun-trigger mtime"
 apptainer = "snakemake --sdm conda apptainer -c 1"
 help  = "bash workflow/help.sh"
 make-help  = "sed -n 's/^##//p' workflow/Snakefile"
-make-dag = "mkdir resources; snakemake --quiet all -c 1 'results/method.png' && mv results/method.png resources; mv resources/method.png resources/pipeline.png"
-make-ascii = "mkdir resources; pixi run make results/method-simple.ascii &&  mv results/method-simple.ascii resources/pipeline.ascii; cat resources/pipeline.ascii"
+make-dag = "mkdir resources -p; pixi run snakemake --quiet all -c 1 'results/method.png' --sdm conda && mv results/method.png resources; mv resources/method.png resources/pipeline.png"
+make-ascii = "mkdir resources -p; pixi run snakemake results/method-simple.ascii --sdm conda &&  mv results/method-simple.ascii resources/pipeline.ascii; cat resources/pipeline.ascii"
 
 
 [dependencies]

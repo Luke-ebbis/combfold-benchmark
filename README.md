@@ -1,6 +1,8 @@
-# snakemake-pixi
+# Combfold benchmark
 
-Building snakemake workflows with pixi ✨
+The pipeline downloads selected structures from the PDB, and produces their
+Combfold predictions. These Combfold predictions are then aligned to
+the known structure and the USalign TM score is reported.
 
 ## Installation
 
@@ -17,3 +19,7 @@ pixi install
 ## Usage
 
 Run `pixi run help` for the help page.
+
+## Details
+
+![](resources/pipeline.png)
