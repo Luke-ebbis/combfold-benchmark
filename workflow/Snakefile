@@ -86,7 +86,7 @@ use rule * from combfold_helper
 use rule * from combfold_folder
 use rule * from combfold
 use rule * from analysis exclude  build_ascii_graph as analysis_*
-
+ruleorder: format_combfold_job > preprocess
 
 use rule preprocess from combfold as preprocess with:
   input: "results/known/jobs/{name}.json"
@@ -108,10 +108,11 @@ def get_colabfold_runtime(wildcards, attempt):
   """Depending on the length of the colabfold input, calculate the runtime
   """
   startup_time = 30/60
+  base_time = 10
   size = get_input_size(wildcards)
-  runtime = ((1/50) * size) + (((size - 500)/50)**4) * 10
+  runtime = ((1/50) * size) + (((size - 500)/50)**4) * 15
   print(runtime)
-  return min(int(runtime + startup_time), 1440)
+  return min(int(base_time + runtime + startup_time), 1440)
 
 use rule colabfold from combfold_folder as colabfold with:
   resources:
@@ -137,8 +138,6 @@ def get_combfold_structures_here(wildcards):
 
   return f"{output_folder}/assembled_results/{output_structures}"
 
-
-
 use rule us_align from analysis as us_align with:
   input:
     x=get_combfold_structures_here,
@@ -146,29 +145,19 @@ use rule us_align from analysis as us_align with:
   output:
     "results/align/{protein_complex}-vs-{output}.usalign.txt"
 
-
-
-use rule us_align_pymol_session from analysis as us_align_pymol_session  with:
-  input:
-    x=get_combfold_structures_here,
-    y="results/known/pdb/{protein_complex}.pdb",
-  output:
-    "results/align/{protein_complex}-vs-{output}.usalign.sup.pse"
-
-use rule us_align_sup from analysis as us_align_sup with:
-  input:
-    x=get_combfold_structures_here,
-    y="results/known/pdb/{protein_complex}.pdb",
-  output:
-    "results/align/{protein_complex}-vs-{output}.usalign.sup"
-
-rule collect_align:
-  input:
-    "results/align/{protein_complex}-vs-output_clustered_0.usalign.txt",
-  output:
-    touch("results/.checkpoints/alignments_{protein_complex}")
-
-
+# use rule us_align_pymol_session from analysis as us_align_pymol_session  with:
+  # input:
+    # x=get_combfold_structures_here,
+    # y="results/known/pdb/{protein_complex}.pdb",
+  # output:
+    # "results/align/{protein_complex}-vs-{output}.usalign.sup.pse"
+#
+# use rule us_align_sup from analysis as us_align_sup with:
+  # input:
+    # x=get_combfold_structures_here,
+    # y="results/known/pdb/{protein_complex}.pdb",
+  # output:
+    # "results/align/{protein_complex}-vs-{output}.usalign.sup"
 
 use rule us_align_pymol_picture from analysis as us_align_pymol_picture with:
   input:
@@ -181,6 +170,14 @@ use rule crop from analysis as crop with:
     "results/align/{name}-vs-{output}.usalign.sup.png"
   output:
     "results/align/{name}-vs-{output}.usalign.sup.crop.png"
+
+rule collect_align:
+  input:
+    "results/align/{protein_complex}-vs-output_clustered_0.usalign.txt",
+  output:
+    touch("results/.checkpoints/alignments_{protein_complex}")
+
+
 
 ## format_combfold_job:
 ##    Using fasta files from PDB files, format the job to submit to the Combfold
