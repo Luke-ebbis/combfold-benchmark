@@ -78,7 +78,7 @@ module combfold:
 module analysis:
   snakefile:
         github("Luke-ebbis/protein-structure-comparison", path="workflow/Snakefile",
-            tag="dev")
+            branch="dev")
   config: config
 
 
@@ -109,7 +109,8 @@ def get_colabfold_runtime(wildcards, attempt):
   """
   startup_time = 30/60
   size = get_input_size(wildcards)
-  runtime = ((1/50) * size) + (((size - 500)/50)**2)
+  runtime = ((1/50) * size) + (((size - 500)/50)**4) * 10
+  print(runtime)
   return min(int(runtime + startup_time), 1440)
 
 use rule colabfold from combfold_folder as colabfold with:
