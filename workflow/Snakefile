@@ -9,9 +9,11 @@
 
 configfile: "config/config.yml"
 
+from Bio import SeqIO
+import os
 
 
-localrules: 
+localrules:
   preprocess,
   download,
   preprocess,
@@ -22,10 +24,10 @@ localrules:
   build_overview,
   install_easy_graph,
   build_ascii_graph,
-  setup_combfold, 
-  produce_fasta_pairs, 
-  gather_pdb_pairs, 
-  produce_fasta_groups, 
+  setup_combfold,
+  produce_fasta_pairs,
+  gather_pdb_pairs,
+  produce_fasta_groups,
   gather_pdb_groups,
   gather_pdb,
   crop,
@@ -86,16 +88,39 @@ use rule * from combfold
 use rule * from analysis exclude  build_ascii_graph as analysis_*
 
 
-use rule preprocess from combfold as new_preprocess with:
+use rule preprocess from combfold as preprocess with:
   input: "results/known/jobs/{name}.json"
   output:
     "results/data/{name}/{name}.json"
 
+def get_input_size(wildcards):
+  """Determine the length of input for colabfold 
+  """
+  input_fasta = f"results/data/{wildcards.protein_complex}/subunits/fasta-{wildcards.grouping}/{wildcards.fasta_file}.fasta"
+  lenght = 0
+  for record in SeqIO.parse(input_fasta, "fasta"):
+    current_len = len(record.seq)
+    if current_len > lenght:
+      lenght = current_len
+  return lenght
 
-use rule download_rcsb from analysis as download with:
+def get_colabfold_runtime(wildcards, attempt):
+  """Depending on the length of the colabfold input, calculate the runtime
+  """
+  startup_time = 30/60
+  size = get_input_size(wildcards)
+  runtime = ((1/150) * size) + (((size - 500)/150)**2)
+  return min(int(runtime + startup_time), 1440)
+
+use rule colabfold from combfold_folder as colabfold with:
+  resources:
+    runtime=get_colabfold_runtime
+
+
+use rule download_rcsb from analysis as download_rcsb with:
   output: "results/known/download/{identifier}.{ext}"
 
-use rule convert from analysis as new_convert with:
+use rule convert from analysis as convert with:
   input: "results/known/download/{identifier}.cif"
   output: "results/known/pdb/{identifier}.pdb"
 
@@ -103,7 +128,6 @@ use rule fasta from analysis as fasta with:
   input: "results/known/pdb/{identifier}.pdb"
   output: "results/known/fasta/{identifier}.fasta"
 
-import os
 
 def get_combfold_structures_here(wildcards):
   output_folder = checkpoints.combfold.get(protein_complex=wildcards.protein_complex).output
@@ -146,20 +170,20 @@ rule collect_align:
 
 
 use rule us_align_pymol_picture from analysis as us_align_pymol_picture with:
-  input: 
+  input:
     "results/align/{name}-vs-{output}.usalign.sup"
-  output: 
+  output:
     "results/align/{name}-vs-{output}.usalign.sup.png"
 
 use rule crop from analysis as crop with:
-  input: 
+  input:
     "results/align/{name}-vs-{output}.usalign.sup.png"
-  output: 
+  output:
     "results/align/{name}-vs-{output}.usalign.sup.crop.png"
 
-
-  
-
+## format_combfold_job:
+##    Using fasta files from PDB files, format the job to submit to the Combfold
+##  pipeline.
 rule format_combfold_job:
   conda: "envs/python.yml"
   input: "results/known/fasta/{identifier}.fasta"
@@ -180,13 +204,13 @@ rule help:
   shell: "sed -n 's/^##//p' {input}"
 
 
-## clean:                     
+## clean:
 ##    Clean all outputs from the results folder.
 ##
 rule clean:
   shell: "rm -rf results/*"
 
-## build_overview:            
+## build_overview:
 ##    Print the directed acyclic graph.
 ##
 rule build_overview:
