@@ -109,7 +109,7 @@ def get_colabfold_runtime(wildcards, attempt):
   """
   startup_time = 30/60
   size = get_input_size(wildcards)
-  runtime = ((1/150) * size) + (((size - 500)/150)**2)
+  runtime = ((1/50) * size) + (((size - 500)/50)**2)
   return min(int(runtime + startup_time), 1440)
 
 use rule colabfold from combfold_folder as colabfold with:
