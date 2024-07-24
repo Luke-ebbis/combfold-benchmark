@@ -31,6 +31,8 @@ localrules:
   gather_pdb_groups,
   gather_pdb,
   crop,
+  download_rcsb,
+  convert,
   us_align_pymol_session,
   us_align_pymol_picture,
 
