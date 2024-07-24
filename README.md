@@ -24,6 +24,21 @@ pixi install
 
 Run `pixi run help` for the help page.
 
+The proteins that are part of the benchmark are listed in `config/config.yml`:
+
+```toml
+colabfold:
+  number_of_models: "5"
+assess:
+  - "6dv2-assembly1"
+  - "6K71"
+  - "5TD9"
+  - "5WBJ"
+```
+
+Under the `assess`, it is possible to specify IDs from RCSB PDB. If there
+are multiple assemblies, one can specify assembly#.
+
 ## Details
 
 ![](resources/pipeline.png)
